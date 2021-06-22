@@ -51,5 +51,13 @@ You can save the data you want to send to use at a later time. To do that just t
 
 ![Save Commands](https://raw.githubusercontent.com/mgulsoy/SerialConsoleUtility/master/readme_content/save_command.jpg)
 
+You can operate with a saved command by selecting and right clicking on them. 
+
+![Saved Command Menu](https://raw.githubusercontent.com/mgulsoy/SerialConsoleUtility/master/readme_content/saved_command_menu.jpg)
+
+You can edit a saved command when the `Compose` box is empty.
+Saved commands can be sent repeatedly. To do that select a command from the list, right click on it and click `Repeat`. Then repeat dialog appears and asks how many times it will repeat and the interval between each send. You should not enter values below 15 ms because of the operating system. The values below 15 ms are not guaranteed.
+
+
 
 
