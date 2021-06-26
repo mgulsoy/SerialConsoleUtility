@@ -188,6 +188,12 @@ namespace SerialConsoleCore {
 
         private void send( DataToSend data ) {
 
+            if( !(serialPort != null && serialPort.IsOpen) ) {
+                //If there is no connection warn the user
+                showMsgbox( "Please connect first" );
+                return;
+            }
+
             DataToSend dts = new DataToSend();
 
             if( rdElCr.IsChecked.Value ) {
