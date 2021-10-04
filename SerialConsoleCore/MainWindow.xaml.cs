@@ -451,6 +451,32 @@ namespace SerialConsoleCore {
             //Debug.Print( "Double click on: {0}", lstSendData.SelectedItem );
             send( lstSendData.SelectedItem as DataToSend );
         }
-                
+
+        /// <summary>
+        /// Produces a reset signal on DTR pin. For arduino like boards.
+        /// </summary>
+        private async void btnResetArduino_Click( object sender, RoutedEventArgs e ) {
+            //Create a reset signal for a connected arduino
+            if( serialPort != null && serialPort.IsOpen ) {
+                btnResetArduino.IsEnabled = false;
+                await Task.Run( new Action( () => {
+                    serialPort.DtrEnable = true;
+                    Thread.Sleep( 500 );
+                    serialPort.DtrEnable = false;
+                } ) );
+                btnResetArduino.IsEnabled = true;
+            } else {
+                showMsgbox( "Please open a connection first" );
+            }
+        }
+
+        /// <summary>
+        /// Clears the traffic data view.
+        /// </summary>
+        /// <param name="sender">The button</param>
+        /// <param name="e">Event Parameters</param>
+        private void btnClearTraffic_Click( object sender, RoutedEventArgs e ) {
+            content.Inlines.Clear();
+        }
     }
 }

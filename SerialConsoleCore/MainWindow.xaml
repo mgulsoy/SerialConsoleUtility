@@ -226,6 +226,10 @@
 
                 <RadioButton x:Name="rdCTS" Content="CTS" Margin="5" IsEnabled="False" />
                 <RadioButton x:Name="rdDSR" Content="DSR" Margin="5" IsEnabled="False" />
+
+                <Line X1="0" X2="0" Y1="0" Y2="50" StrokeThickness="4" Stroke="Gray" Margin="5,0,5,0"></Line>
+
+                <Button x:Name="btnResetArduino" Content="Reset Arduino" Click="btnResetArduino_Click"></Button>
             </StackPanel>
         </GroupBox>
 
@@ -243,6 +247,12 @@
                     <Paragraph Name="content"></Paragraph>
                 </FlowDocument>
             </FlowDocumentScrollViewer>
+        </GroupBox>
+
+        <GroupBox Grid.Row="2" Grid.Column="1" Header="Controls" Margin="0,5">
+            <WrapPanel Orientation="Horizontal">
+                <Button x:Name="btnClearTraffic" Content="Clear Traffic" Margin="2,0" Padding="4,0" Click="btnClearTraffic_Click"></Button>
+            </WrapPanel>
         </GroupBox>
 
         <!--MessageBox-->
