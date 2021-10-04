@@ -51,7 +51,7 @@ You can save the data you want to send to use at a later time. To do that just t
 
 ![Save Commands](https://raw.githubusercontent.com/mgulsoy/SerialConsoleUtility/master/readme_content/save_command.jpg)
 
-You can operate with a saved command by selecting and right clicking on them. 
+You can operate with a saved command by selecting and right clicking on them. Also double clicking on a command, sends it.
 
 ![Saved Command Menu](https://raw.githubusercontent.com/mgulsoy/SerialConsoleUtility/master/readme_content/saved_command_menu.jpg)
 
