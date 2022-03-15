@@ -5,13 +5,14 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>serial-port.ico</ApplicationIcon>
-    <Version>0.2</Version>
+    <Version>0.3</Version>
     <Authors>Mert Gülsoy</Authors>
     <Description>Simple Serial Console Utility for Makers</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.IO.Ports" Version="5.0.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

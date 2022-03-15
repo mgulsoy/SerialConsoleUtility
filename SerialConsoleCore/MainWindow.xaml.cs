@@ -39,6 +39,8 @@ namespace SerialConsoleCore {
         Task repeaterTask = null;
         CancellationTokenSource repeaterTokenSource = null;
 
+        Encoding portEncoding;
+
 
         State programState;
 
@@ -63,8 +65,11 @@ namespace SerialConsoleCore {
             //Set control data
             cmbBaud.SelectedIndex = programState.SelectedBaudIndex;
             cmbParity.SelectedIndex = programState.SelectedParityIndex;
+            cmbEncoding.SelectedIndex = programState.SelectedEncodingIndex;
             rb7.IsChecked = programState.SelectedBitCount == 7;
             rb8.IsChecked = programState.SelectedBitCount == 8;
+
+            Encoding.RegisterProvider( CodePagesEncodingProvider.Instance );
         }
 
         private void loadState() {
@@ -95,6 +100,7 @@ namespace SerialConsoleCore {
             programState.SelectedBitCount = rb7.IsChecked.Value ? 7 : 8;
             programState.SelectedBaudIndex = cmbBaud.SelectedIndex;
             programState.SelectedParityIndex = cmbParity.SelectedIndex;
+            programState.SelectedEncodingIndex = cmbEncoding.SelectedIndex;
 
             programState.LastDataToSendColl.Clear();
             programState.LastDataToSendColl.AddRange( lstSendData.Items.SourceCollection.Cast<DataToSend>() );
@@ -114,6 +120,7 @@ namespace SerialConsoleCore {
         private void hideMsgbox() {
             msgBg.Visibility = Visibility.Hidden;
             msgCont.Visibility = Visibility.Hidden;
+            hlpCompose.Visibility = Visibility.Hidden;
         }
 
         private void fillPorts() {
@@ -124,15 +131,19 @@ namespace SerialConsoleCore {
         }
 
         private void AppendReceived( byte[] data ) {
-            string text = Encoding.UTF8.GetString(data);
-
+ 
             Dispatcher.InvokeAsync( () => {
+
+                string text = portEncoding.GetString(data);
+
                 Run run = new Run(text); ;
                 run.Foreground = Brushes.Green;
                 run.Tag = Brushes.LightGreen;
                 run.MouseEnter += Run_MouseEnter;
                 run.MouseLeave += Run_MouseLeave;
                 content.Inlines.Add( run );
+
+                rdScroller.ScrollToEnd();
             } );
         }
 
@@ -144,6 +155,8 @@ namespace SerialConsoleCore {
                 run.MouseEnter += Run_MouseEnter;
                 run.MouseLeave += Run_MouseLeave;
                 content.Inlines.Add( run );
+
+                rdScroller.ScrollToEnd();
             } );
         }
 
@@ -161,6 +174,7 @@ namespace SerialConsoleCore {
             cmbPorts.IsEnabled = enabled;
             cmbBaud.IsEnabled = enabled;
             cmbParity.IsEnabled = enabled;
+            cmbEncoding.IsEnabled = enabled;
             rddBits.IsEnabled = enabled;
         }
 
@@ -175,13 +189,16 @@ namespace SerialConsoleCore {
                         AppendReceived( lbuf );                        
                     }
                     Dispatcher.InvokeAsync( new Action( () => {
-                        rdCTS.IsChecked = serialPort.CtsHolding;
-                        rdDSR.IsChecked = serialPort.DsrHolding;
+                        if( serialPort != null ) {
+                            rdCTS.IsChecked = serialPort.CtsHolding;
+                            rdDSR.IsChecked = serialPort.DsrHolding;
+                        }
                     } ) );
                     Thread.Sleep( 30 );
                 }
-            } catch( Exception ) {
+            } catch( Exception ex ) {
                 //Todo: handle port exceptions
+                Debug.Print( ex.Message );
                 return;
             }
         }
@@ -194,15 +211,16 @@ namespace SerialConsoleCore {
                 return;
             }
 
+            
+
             DataToSend dts = new DataToSend();
+            dts.IsHex = data.IsHex;
 
             if( rdElCr.IsChecked.Value ) {
                 //treat end line as CR
-                dts.IsHex = data.IsHex;
                 dts.DataString = data.DataString.Replace( "\r\n", "\r" );
             } else if( rdElLf.IsChecked.Value ) {
                 //treat end line as CR
-                dts.IsHex = data.IsHex;
                 dts.DataString = data.DataString.Replace( "\r\n", "\n" );
             } else {
                 dts = data;
@@ -244,6 +262,19 @@ namespace SerialConsoleCore {
                 );
 
                 serialPort.ReadTimeout = 1000;
+
+                string encodingSel = ((ComboBoxItem)cmbEncoding.SelectedItem).Content.ToString();
+
+
+                if( encodingSel == "Utf-8" ) {
+                    portEncoding = Encoding.UTF8;
+                } else if( encodingSel == "Cp-1254" ) {
+                    portEncoding = Encoding.GetEncoding( 1254 );
+                } else if( encodingSel == "Cp-1252" ) {
+                    portEncoding = Encoding.GetEncoding( 1252 );
+                } else if( encodingSel == "ASCII" ) {
+                    portEncoding = Encoding.ASCII;
+                }
 
                 try {
                     serialPort.Open();
@@ -331,12 +362,8 @@ namespace SerialConsoleCore {
             //Save the compose text box contents
             if( !string.IsNullOrEmpty( txtCompose.Text ) ) {
 
-                DataToSend dataToSend = new DataToSend() {
-                    DataString = txtCompose.Text,
-                    IsHex = rdHex.IsChecked.Value
-                };
-
-                lstSendData.Items.Add( dataToSend );
+                msgBg.Visibility = Visibility.Visible;
+                inpCont.Visibility = Visibility.Visible;
             }
         }
 
@@ -425,7 +452,7 @@ namespace SerialConsoleCore {
                     int rc = repeatCount;
                     int sti = sleepTimeInterval;
                     while( !repeaterTokenSource.Token.IsCancellationRequested && rc > 0 ) {
-                        send( dts );
+                        Dispatcher.InvokeAsync( () => send( dts ) );
                         Thread.Sleep( sti );
                         rc--;
                     }
@@ -477,6 +504,28 @@ namespace SerialConsoleCore {
         /// <param name="e">Event Parameters</param>
         private void btnClearTraffic_Click( object sender, RoutedEventArgs e ) {
             content.Inlines.Clear();
+        }
+
+        private void btnSaveProceed_Click( object sender, RoutedEventArgs e ) {
+            // Proceed and save
+            // Ask for a label
+
+
+            DataToSend dataToSend = new DataToSend() {
+                DataString = txtCompose.Text,
+                IsHex = rdHex.IsChecked.Value,
+                Label = tbInp.Text,
+            };
+
+            lstSendData.Items.Add( dataToSend );
+
+            msgBg.Visibility = inpCont.Visibility = Visibility.Hidden;
+        }
+
+        private void btnComposeHelp_Click( object sender, RoutedEventArgs e ) {
+            // Show help for compose
+            msgBg.Visibility = Visibility.Visible;
+            hlpCompose.Visibility = Visibility.Visible;
         }
     }
 }

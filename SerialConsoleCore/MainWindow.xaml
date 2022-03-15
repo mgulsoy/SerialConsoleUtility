@@ -93,10 +93,11 @@
                     <TextBox x:Name="txtCompose" Height="80" FontFamily="Consolas" AcceptsReturn="True" TextWrapping="Wrap" MaxLines="5" ></TextBox>
 
                     <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                        <Button x:Name="btnComposeHelp" Content=" ? " Margin="2,2" Click="btnComposeHelp_Click" />
                         <RadioButton x:Name="rdHex" Content="Hex" GroupName="datatype" Margin="5,0" VerticalAlignment="Center"/>
-                        <RadioButton x:Name="rdText" Content="Text" GroupName="datatype" Margin="5,0"  VerticalAlignment="Center" IsChecked="True"/>
-                        <Button x:Name="btnAddData" Content="  Save  " Margin="5,0" VerticalAlignment="Center" Height="28" Width="72" Click="btnAddData_Click" />
-                        <Button x:Name="btnSend" Content="  Send  " Margin="17,0,0,0" VerticalAlignment="Center" Height="28" Width="79" Click="btnSend_Click" />
+                        <RadioButton x:Name="rdText" Content="Text" GroupName="datatype" Margin="4,0"  VerticalAlignment="Center" IsChecked="True"/>
+                        <Button x:Name="btnAddData" Content="  Save  " Margin="3,0" VerticalAlignment="Center" Height="28" Width="72" Click="btnAddData_Click" />
+                        <Button x:Name="btnSend" Content="  Send  " Margin="3,0,0,0" VerticalAlignment="Center" Height="28" Width="79" Click="btnSend_Click" />
                     </StackPanel>
                 </StackPanel>
 
@@ -151,7 +152,7 @@
                     </ListView.ContextMenu>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Border BorderBrush="Green" BorderThickness="2" Background="White" Padding="3" CornerRadius="2" Margin="0,2" Width="244" Tag="{Binding DataString}" PreviewMouseLeftButtonDown="Border_PreviewMouseLeftButtonDown">
+                            <Border BorderBrush="Green" BorderThickness="1" Background="White" Padding="1" CornerRadius="2" Margin="0,1" Width="264" Tag="{Binding DataString}" PreviewMouseLeftButtonDown="Border_PreviewMouseLeftButtonDown">
                                 <!--<StackPanel Orientation="Horizontal">
                                     <Border BorderBrush="DarkBlue" BorderThickness="1" Background="#FFC8C8FB" Margin="0 0 5 0" Tag="{Binding DataString}" >
                                         <Viewbox Width="16" Height="16">
@@ -163,16 +164,28 @@
                                             <ContentControl Content="{StaticResource repeat}" />
                                         </Viewbox>
                                     </Border>-->
-                                <TextBlock Text="{Binding DataString}" FontFamily="Consolas" />
+                                
 
                                 <!--</StackPanel>-->
+                                <StackPanel Orientation="Horizontal">
+                                    <Border BorderBrush="DarkOrange" BorderThickness="0.8" CornerRadius="2" Margin="1,0" Background="Orange" Padding="1,0">
+                                        <TextBlock Text="{Binding Label}" FontSize="10" />
+                                    </Border>
+                                    <Border BorderBrush="Blue" BorderThickness="0.8" CornerRadius="2" Margin="1,0" Background="DarkBlue" Padding="1,0" Visibility="{Binding Visible}">
+                                        <TextBlock Text="Hex" FontSize="10" Foreground="White" />
+                                    </Border>
+                                    <Border BorderBrush="White" BorderThickness="0.8" Margin="1,0" Padding="1,0">
+                                        <TextBlock Text="{Binding DataString}" FontFamily="Consolas" />
+                                    </Border>
+                                    
+                                </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ListView.ItemTemplate>
 
-                    <local:DataToSend DataString="Deneme deneme deneme"/>
-                    <local:DataToSend DataString="Bir diğer veri"/>
-                    <local:DataToSend DataString="yok canım bu kadar da olmaz!"/>
+                    <local:DataToSend DataString="Deneme deneme deneme" Label="Resetle" IsHex="True"/>
+                    <local:DataToSend DataString="Bir diğer veri" Label="Motor Komutu"/>
+                    <local:DataToSend DataString="yok canım bu kadar da olmaz!" Label="Bılı"/>
 
                 </ListView>
             </Grid>
@@ -214,6 +227,13 @@
                     <ComboBoxItem Content="Even" />
                     <ComboBoxItem Content="Odd" />
                 </ComboBox>
+                <Label Content="Encoding" />
+                <ComboBox x:Name="cmbEncoding" SelectedIndex="0" >
+                    <ComboBoxItem Content="Utf-8" />
+                    <ComboBoxItem Content="ASCII" />
+                    <ComboBoxItem Content="Cp-1254" />
+                    <ComboBoxItem Content="Cp-1252" />
+                </ComboBox>
                 <ToggleButton x:Name="tbtnConnect" Margin="0,5" Height="28" Click="tbtnConnect_Click" >Open</ToggleButton>
             </StackPanel>
 
@@ -234,19 +254,21 @@
         </GroupBox>
 
         <GroupBox Grid.Row="1" Grid.Column="1" Header="Traffic">
-            <FlowDocumentScrollViewer Name="rdViewer">
-                <FlowDocument Name="rawDataDoc" FontFamily="consolas">
-                    <FlowDocument.Resources>
-                        <Style TargetType="{x:Type Paragraph}">
-                            <Setter Property="Margin" Value="0,6" />
-                        </Style>
-                    </FlowDocument.Resources>
-                    <!--<Paragraph Foreground="DeepPink" BorderBrush="HotPink" BorderThickness="2" Padding="2" Background="#FFFFDDE3">
+            <ScrollViewer Name="rdScroller">
+                <FlowDocumentScrollViewer Name="rdViewer">
+                    <FlowDocument Name="rawDataDoc" FontFamily="consolas">
+                        <FlowDocument.Resources>
+                            <Style TargetType="{x:Type Paragraph}">
+                                <Setter Property="Margin" Value="0,6" />
+                            </Style>
+                        </FlowDocument.Resources>
+                        <!--<Paragraph Foreground="DeepPink" BorderBrush="HotPink" BorderThickness="2" Padding="2" Background="#FFFFDDE3">
                         <Run Text="deneme"></Run>
                     </Paragraph>-->
-                    <Paragraph Name="content"></Paragraph>
-                </FlowDocument>
-            </FlowDocumentScrollViewer>
+                        <Paragraph Name="content"></Paragraph>
+                    </FlowDocument>
+                </FlowDocumentScrollViewer>
+            </ScrollViewer>
         </GroupBox>
 
         <GroupBox Grid.Row="2" Grid.Column="1" Header="Controls" Margin="0,5">
@@ -261,6 +283,25 @@
         <StackPanel x:Name="msgCont" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
             <TextBlock x:Name="tbMsg" TextAlignment="Center" Margin="0,10,0,0">deneme</TextBlock>
             <Button Content="Ok" Width="100" Margin="0,10" Click="Button_Click" />
+        </StackPanel>
+
+        <StackPanel x:Name="hlpCompose" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
+            <TextBlock x:Name="tbComposeHelp" Margin="10">
+                <Run FontWeight="Bold" Text="Text Mode:"/><LineBreak />
+                <Run>You can type chars. It is also possible to encode byte values by hex, decimal, and octal forms:</Run><LineBreak/>
+                <Run>&#x20;&#x20;</Run>&#x20; &#x20;<Run FontWeight="Bold">Hex:</Run> <Run>Use escape char</Run> <Bold>#x</Bold> <Run>and type 2 chars. For example for byte decimal value 100 type: #x64</Run><LineBreak/>
+                <Run>&#x20;&#x20;</Run>&#x20; &#x20;<Run FontWeight="Bold">Decimal:</Run> <Run>Use escape char</Run> <Bold>#d</Bold> <Run>and type 3 chars. For example for byte decimal value 100 type: #d100 or for 1 type: #d001</Run><LineBreak/>
+                <Run>&#x20;&#x20;</Run>&#x20; &#x20;<Run FontWeight="Bold">Octal:</Run> <Run>Use escape char</Run> <Bold>#o</Bold> <Run>and type 3 chars. For example for byte decimal value 100 type: #o144 or for 1 type: #o001</Run><LineBreak/>
+                <Run FontWeight="Bold" Text="Hex Mode:"/><LineBreak />
+                <Run>Type hex values with 2 chars seperated by a space.</Run> <Bold>Example:</Bold> <Run FontFamily="Consolas">00 A0 C4 FF 45 ...</Run>
+            </TextBlock>
+            <Button Content="Ok" Width="100" Margin="0,10" Click="Button_Click" />
+        </StackPanel>
+
+        <StackPanel x:Name="inpCont" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
+            <Label Content="You can give a label to the macro or leave empty." HorizontalAlignment="Center" x:Name="lblInp"/>
+            <TextBox x:Name="tbInp" TextAlignment="Center" Margin="10,0,10,0" HorizontalAlignment="Stretch" Background="Wheat" Width="{Binding Width, ElementName=lblInp}" ></TextBox>
+            <Button Content="Save" Width="100" Margin="0,10" x:Name="btnSaveProceed" Click="btnSaveProceed_Click" />
         </StackPanel>
 
         <StackPanel x:Name="repeatDialog" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >

@@ -13,6 +13,8 @@ namespace SerialConsoleCore {
 
         public int SelectedParityIndex { get; set; }
 
+        public int SelectedEncodingIndex { get; set; }
+
         public List<DataToSend> LastDataToSendColl { get; set; }
 
         public string LastComposeBoxContent { get; set; }
