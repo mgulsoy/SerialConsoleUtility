@@ -52,6 +52,12 @@ namespace SerialConsoleCore {
         public static readonly RoutedCommand RepeatCommand = new RoutedCommand("Repeat", typeof(RoutedCommand));
         public static readonly RoutedCommand StopRepeatCommand = new RoutedCommand("StopRepeat", typeof(RoutedCommand));
 
+        public enum UtilEnum {
+            Traffic, Chart
+        }
+
+        public UtilEnum SelectedUtil;
+
         public MainWindow() {
             InitializeComponent();
 
@@ -70,6 +76,7 @@ namespace SerialConsoleCore {
             rb8.IsChecked = programState.SelectedBitCount == 8;
 
             Encoding.RegisterProvider( CodePagesEncodingProvider.Instance );
+            SelectedUtil = UtilEnum.Traffic;
         }
 
         private void loadState() {
@@ -130,14 +137,40 @@ namespace SerialConsoleCore {
             }
         }
 
+        private void AppendLog(string logMessage) {
+            Dispatcher.InvokeAsync( () => {
+                Run run = new Run(Environment.NewLine + logMessage + Environment.NewLine); ;
+                run.Foreground = Brushes.Crimson;
+                run.FontFamily = new FontFamily( "Segoe UI" );
+                run.FontWeight = FontWeights.Bold;
+                content.Inlines.Add( run );
+
+                rdScroller.ScrollToEnd();
+            } );
+        }
+
         private void AppendReceived( byte[] data ) {
  
             Dispatcher.InvokeAsync( () => {
 
-                string text = portEncoding.GetString(data);
+                bool showHex = chkShowHex.IsChecked ?? false;
+                string text = "";
+                if( showHex ) {
+                    StringBuilder sb = new StringBuilder();
+                    for( int i = 0; i < data.Length; i++ ) {
+                        sb.AppendFormat( "{0,3:x2}", data[i] );
+                    }
+
+                    text = sb.ToString();
+                } else {
+                    text = portEncoding.GetString( data );
+                }
+
 
                 Run run = new Run(text); ;
-                run.Foreground = Brushes.Green;
+                run.Foreground = showHex ?  Brushes.CornflowerBlue : Brushes.Green;
+                if( showHex ) run.FontWeight = FontWeights.Bold;
+                
                 run.Tag = Brushes.LightGreen;
                 run.MouseEnter += Run_MouseEnter;
                 run.MouseLeave += Run_MouseLeave;
@@ -147,9 +180,21 @@ namespace SerialConsoleCore {
             } );
         }
 
+        private void AppendChart( byte[] lbuf ) {
+            
+        }
+
         private void AppendSent( string s ) {
             Dispatcher.InvokeAsync( () => {
-                Run run = new Run(s); ;
+                bool showHex = chkShowHex.IsChecked ?? false;
+
+                string ss = s;
+
+                if( showHex ) {
+                    ss = Environment.NewLine + s + Environment.NewLine;
+                }
+
+                Run run = new Run(ss); ;
                 run.Foreground = Brushes.DeepPink;
                 run.Tag = Brushes.LightPink;
                 run.MouseEnter += Run_MouseEnter;
@@ -186,7 +231,13 @@ namespace SerialConsoleCore {
                     if( available > 0 ) {
                         byte[] lbuf = new byte[available];
                         serialPort.Read( lbuf, 0, available );
-                        AppendReceived( lbuf );                        
+                        if( SelectedUtil == UtilEnum.Traffic ) {
+                            AppendReceived( lbuf );
+                        } else if( SelectedUtil == UtilEnum.Chart ) {
+                            // A circular buffer can be utilized to operate
+                            AppendChart( lbuf );
+                        }
+                                                
                     }
                     Dispatcher.InvokeAsync( new Action( () => {
                         if( serialPort != null ) {
@@ -202,6 +253,8 @@ namespace SerialConsoleCore {
                 return;
             }
         }
+
+        
 
         private void send( DataToSend data ) {
 
@@ -281,6 +334,7 @@ namespace SerialConsoleCore {
                     portWatcher = new Thread( new ThreadStart( portWatcherWork ) );
                     pollerEnabled = true;
                     portWatcher.Start();
+                    AppendLog( $"{serialPort.PortName} opened at {serialPort.BaudRate} baud." );
                 } catch( Exception ex ) {
                     showMsgbox( ex.Message );
                     serialPort = null;
@@ -305,6 +359,8 @@ namespace SerialConsoleCore {
                 if( serialPort.IsOpen ) {
                     serialPort.Close();
 
+                    string name = serialPort.PortName;
+
                     //shutdown thread
                     if( portWatcher != null ) {
                         //portWatcher.Abort();
@@ -316,6 +372,7 @@ namespace SerialConsoleCore {
                     //change button content
                     tbtnConnect.Content = "Open";
                     setControlState( true );
+                    AppendLog( $"{name} closed" );
                 }
 
         }
@@ -526,6 +583,16 @@ namespace SerialConsoleCore {
             // Show help for compose
             msgBg.Visibility = Visibility.Visible;
             hlpCompose.Visibility = Visibility.Visible;
+        }
+
+        private void TabItem_GotFocus( object sender, RoutedEventArgs e ) {
+            Debug.Print( "Traffic got focus" );
+            SelectedUtil = UtilEnum.Traffic;
+        }
+
+        private void TabItem_GotFocus_1( object sender, RoutedEventArgs e ) {
+            Debug.Print( "Chart Got focus" );
+            SelectedUtil = UtilEnum.Chart;
         }
     }
 }

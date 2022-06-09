@@ -79,10 +79,14 @@ namespace SerialConsoleCore {
                             //Parse hex
                             if( i+2 < bx.Length ) {
                                 //expect 2 bytes for hex
-                                int hex = Math.Min((bx[++i] - 48) * 16, 0xF0);
-                                hex += Math.Min( bx[++i] - 48, 0x0F );
-                                byte hexByte = (byte)(hex & 0x000000FF);
-                                outputcoll.Add( hexByte );                                                                                                
+                                try {
+                                    string hex = "0x" + (char)bx[++i] + (char)bx[++i];
+                                    byte hexByte = System.Convert.ToByte(hex,16);
+                                    outputcoll.Add( hexByte );
+                                } catch( Exception ) {
+                                    // Overflow or conversion error
+                                    outputcoll.Add( 0xff );
+                                }                                                                                           
                             }
                             //If there is not enough bytes then do nothing
                             continue;
@@ -101,11 +105,14 @@ namespace SerialConsoleCore {
                             //Parse octal
                             if( i + 3 < bx.Length ) {
                                 //expect 3 bytes for octal
-                                int oct = Math.Min((bx[++i] - 48) * (8^2), 192 );
-                                oct = Math.Min( oct + ( bx[++i] - 48 ) * 8, 248 );
-                                oct = Math.Min( oct + bx[++i] - 48, 255 );
-                                byte hexByte = (byte)(oct & 0x000000FF);
-                                outputcoll.Add( hexByte );
+                                try {
+                                    string oct = string.Concat((char)bx[++i], (char)bx[++i], (char)bx[++i]);
+                                    byte hexByte = System.Convert.ToByte(oct,8);
+                                    outputcoll.Add( hexByte );
+                                } catch(  Exception ) {
+                                    // Overflow!
+                                    outputcoll.Add( 0xff );
+                                }
                             }
                             continue;
                         }
@@ -119,6 +126,10 @@ namespace SerialConsoleCore {
             return outputcoll.ToArray();
 
         }
+
+        /*public override byte[] GetBytesRegex( string s ) {
+
+        }*/
 
         /// <summary>
         /// Returns bytes of a hex string seperated by space

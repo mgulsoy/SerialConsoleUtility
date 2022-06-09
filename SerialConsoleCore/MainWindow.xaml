@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:SerialConsoleCore"
         mc:Ignorable="d"
         Title="Serial Console Utility" Height="450" Width="800" Closing="Window_Closing">
@@ -69,7 +70,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
             <RowDefinition Height="4*" />
-            <RowDefinition />
+            <RowDefinition Height="80"/>
         </Grid.RowDefinitions>
 
         <GroupBox Header="Send Data" Grid.RowSpan="3"  Margin="5">
@@ -253,27 +254,59 @@
             </StackPanel>
         </GroupBox>
 
-        <GroupBox Grid.Row="1" Grid.Column="1" Header="Traffic">
-            <ScrollViewer Name="rdScroller">
-                <FlowDocumentScrollViewer Name="rdViewer">
+        <GroupBox Grid.Row="1" Grid.Column="1" Padding="0,5">
+
+            <TabControl>
+                <TabItem Header="Traffic" GotFocus="TabItem_GotFocus" x:Name="tabTraffic">
+                    <ScrollViewer Name="rdScroller">
+                        <FlowDocumentScrollViewer Name="rdViewer" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                            <FlowDocument Name="rawDataDoc" FontFamily="consolas">
+                                <FlowDocument.Resources>
+                                    <Style TargetType="{x:Type Paragraph}">
+                                        <Setter Property="Margin" Value="0,6" />
+                                    </Style>
+                                </FlowDocument.Resources>
+                                <Paragraph Name="content"></Paragraph>
+                            </FlowDocument>
+                        </FlowDocumentScrollViewer>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Line Chart" GotFocus="TabItem_GotFocus_1" x:Name="tabChart">
+                    <lvc:CartesianChart Margin="3" x:Name="lineChart">
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis Title="Data"></lvc:Axis>
+                        </lvc:CartesianChart.AxisY>
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Title="time"></lvc:Axis>
+                        </lvc:CartesianChart.AxisX>
+                        
+                    </lvc:CartesianChart>
+                    
+                </TabItem>
+
+            </TabControl>
+
+            <!--<ScrollViewer Name="rdScroller">
+                <FlowDocumentScrollViewer Name="rdViewer" ScrollViewer.VerticalScrollBarVisibility="Hidden">
                     <FlowDocument Name="rawDataDoc" FontFamily="consolas">
                         <FlowDocument.Resources>
                             <Style TargetType="{x:Type Paragraph}">
                                 <Setter Property="Margin" Value="0,6" />
                             </Style>
                         </FlowDocument.Resources>
-                        <!--<Paragraph Foreground="DeepPink" BorderBrush="HotPink" BorderThickness="2" Padding="2" Background="#FFFFDDE3">
+                        --><!--<Paragraph Foreground="DeepPink" BorderBrush="HotPink" BorderThickness="2" Padding="2" Background="#FFFFDDE3">
                         <Run Text="deneme"></Run>
-                    </Paragraph>-->
+                    </Paragraph>--><!--
                         <Paragraph Name="content"></Paragraph>
                     </FlowDocument>
                 </FlowDocumentScrollViewer>
-            </ScrollViewer>
+            </ScrollViewer>-->
         </GroupBox>
 
         <GroupBox Grid.Row="2" Grid.Column="1" Header="Controls" Margin="0,5">
             <WrapPanel Orientation="Horizontal">
-                <Button x:Name="btnClearTraffic" Content="Clear Traffic" Margin="2,0" Padding="4,0" Click="btnClearTraffic_Click"></Button>
+                <Button x:Name="btnClearTraffic" Content="  Clear Traffic  " Margin="2,2" Padding="4,0" Click="btnClearTraffic_Click"></Button>
+                <CheckBox x:Name="chkShowHex" Content="Show Hex" Margin="4,4"/>
             </WrapPanel>
         </GroupBox>
 
