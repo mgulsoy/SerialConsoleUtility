@@ -58,12 +58,22 @@
         <CommandBinding Command="local:MainWindow.RepeatCommand" CanExecute="RepeatCommandBinding_CanExecute" Executed="RepeatCommandBinding_Executed" />
         <CommandBinding Command="ApplicationCommands.Delete" CanExecute="DeleteCommandBinding_CanExecute" Executed="DeleteCommandBinding_Executed" />
         <CommandBinding Command="local:MainWindow.StopRepeatCommand" CanExecute="StopRepeatCommandBinding_CanExecute" Executed="StopRepeatCommandBinding_Executed" />
+        <CommandBinding Command="local:MainWindow.SendTboxCommand" CanExecute="SendTboxCommandBinding_CanExecute" Executed="SendTboxCommandBinding_Executed" />
+        <CommandBinding Command="local:MainWindow.ConvertToU8Command" CanExecute="ConvertToU8CommandBinding_CanExecute" Executed="ConvertToU8CommandBinding_Executed"/>
+        <CommandBinding Command="local:MainWindow.ConvertToU16Command" CanExecute="ConvertToU16CommandBinding_CanExecute" Executed="ConvertToU16CommandBinding_Executed"/>
+        <CommandBinding Command="local:MainWindow.ConvertToU32Command" CanExecute="ConvertToU32CommandBinding_CanExecute" Executed="ConvertToU32CommandBinding_Executed"/>
+        <CommandBinding Command="local:MainWindow.ConvertToU64Command" CanExecute="ConvertToU64CommandBinding_CanExecute" Executed="ConvertToU64CommandBinding_Executed"/>
+        <CommandBinding Command="local:MainWindow.ConvertToI8Command" CanExecute="ConvertToI8CommandBinding_CanExecute" Executed="ConvertToI8CommandBinding_Executed"/>
+        <CommandBinding Command="local:MainWindow.ConvertToI16Command" CanExecute="ConvertToI16CommandBinding_CanExecute" Executed="ConvertToI16CommandBinding_Executed"/>
+        <CommandBinding Command="local:MainWindow.ConvertToI32Command" CanExecute="ConvertToI32CommandBinding_CanExecute" Executed="ConvertToI32CommandBinding_Executed"/>
+        <CommandBinding Command="local:MainWindow.ConvertToI64Command" CanExecute="ConvertToI64CommandBinding_CanExecute" Executed="ConvertToI64CommandBinding_Executed"/>
     </Window.CommandBindings>
 
     <Grid>
         <Grid.ColumnDefinitions >
-            <ColumnDefinition Width="300"/>
-            <ColumnDefinition />
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="150"/>
         </Grid.ColumnDefinitions>
 
@@ -104,7 +114,7 @@
 
                 <Label Content="Saved Commands" Grid.Row="1"/>
 
-                <ListView x:Name="lstSendData" Margin="0" Background="#FFBFD5FD" Grid.Row="2" MouseDoubleClick="lstSendData_MouseDoubleClick" >
+                <ListView x:Name="lstSendData" Margin="0" Background="#FFBFD5FD" Grid.Row="2" MouseDoubleClick="lstSendData_MouseDoubleClick" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="False" >
                     <ListView.Resources>
                         <Style TargetType="{x:Type ListViewItem}">
                             <Setter Property="Template">
@@ -192,7 +202,9 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Serial Port Config" Grid.Column="2" Margin="5" Grid.RowSpan="3">
+        <GridSplitter x:Name="splitter1" Grid.Column="1" Width="5" Grid.RowSpan="3" HorizontalAlignment="Stretch" Background="#FFB5B5B5" />
+
+        <GroupBox Header="Serial Port Config" Grid.Column="3" Margin="5" Grid.RowSpan="3">
             <StackPanel Orientation="Vertical" Grid.Column="1">
                 <Label Content="Port" />
                 <ComboBox x:Name="cmbPorts" PreviewMouseLeftButtonDown="cmbPorts_PreviewMouseLeftButtonDown" ></ComboBox>
@@ -236,11 +248,12 @@
                     <ComboBoxItem Content="Cp-1252" />
                 </ComboBox>
                 <ToggleButton x:Name="tbtnConnect" Margin="0,5" Height="28" Click="tbtnConnect_Click" >Open</ToggleButton>
+                <Button x:Name="btnLoadProfile" Margin="0,5" Height="28" Click="btnLoadProfile_Click">Load Profile</Button>
             </StackPanel>
 
         </GroupBox>
 
-        <GroupBox Header="Pins" Margin="2,0,0,0" Grid.Column="1">
+        <GroupBox Header="Pins" Margin="2,0,0,0" Grid.Column="2">
             <StackPanel Orientation="Horizontal" x:Name="spanelPins">
                 <CheckBox x:Name="chkDTR" Content="DTR" Margin="5" Click="chkDTR_Click" />
                 <CheckBox x:Name="chkRTS" Content="RTS" Margin="5" Click="chkRTS_Click" />
@@ -254,12 +267,28 @@
             </StackPanel>
         </GroupBox>
 
-        <GroupBox Grid.Row="1" Grid.Column="1" Padding="0,5">
+        <GroupBox Grid.Row="1" Grid.Column="2" Padding="0,5">
 
             <TabControl>
                 <TabItem Header="Traffic" GotFocus="TabItem_GotFocus" x:Name="tabTraffic">
                     <ScrollViewer Name="rdScroller">
                         <FlowDocumentScrollViewer Name="rdViewer" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                            <FlowDocumentScrollViewer.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Convert to" Icon="{DynamicResource box}">
+                                        <MenuItem Header="Uint8" Command="local:MainWindow.ConvertToU8Command"/>
+                                        <MenuItem Header="Uint16" Command="local:MainWindow.ConvertToU16Command"/>
+                                        <MenuItem Header="Uint32" Command="local:MainWindow.ConvertToU32Command"/>
+                                        <MenuItem Header="Uint64" Command="local:MainWindow.ConvertToU64Command"/>
+                                        <Separator/>
+                                        <MenuItem Header="Int8" Command="local:MainWindow.ConvertToI8Command"/>
+                                        <MenuItem Header="Int16" Command="local:MainWindow.ConvertToI16Command"/>
+                                        <MenuItem Header="Int32" Command="local:MainWindow.ConvertToI32Command"/>
+                                        <MenuItem Header="Int64" Command="local:MainWindow.ConvertToI64Command"/>
+                                    </MenuItem>
+
+                                </ContextMenu>
+                            </FlowDocumentScrollViewer.ContextMenu>
                             <FlowDocument Name="rawDataDoc" FontFamily="consolas">
                                 <FlowDocument.Resources>
                                     <Style TargetType="{x:Type Paragraph}">
@@ -268,6 +297,7 @@
                                 </FlowDocument.Resources>
                                 <Paragraph Name="content"></Paragraph>
                             </FlowDocument>
+                            
                         </FlowDocumentScrollViewer>
                     </ScrollViewer>
                 </TabItem>
@@ -303,7 +333,7 @@
             </ScrollViewer>-->
         </GroupBox>
 
-        <GroupBox Grid.Row="2" Grid.Column="1" Header="Controls" Margin="0,5">
+        <GroupBox Grid.Row="2" Grid.Column="2" Header="Controls" Margin="0,5">
             <WrapPanel Orientation="Horizontal">
                 <Button x:Name="btnClearTraffic" Content="  Clear Traffic  " Margin="2,2" Padding="4,0" Click="btnClearTraffic_Click"></Button>
                 <CheckBox x:Name="chkShowHex" Content="Show Hex" Margin="4,4"/>
@@ -311,14 +341,14 @@
         </GroupBox>
 
         <!--MessageBox-->
-        <Border x:Name="msgBg" Background="Black" Opacity="0.7" Grid.ColumnSpan="3" Grid.RowSpan="3" Visibility="Hidden" />
+        <Border x:Name="msgBg" Background="Black" Opacity="0.7" Grid.ColumnSpan="4" Grid.RowSpan="3" Visibility="Hidden" />
 
-        <StackPanel x:Name="msgCont" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
+        <StackPanel x:Name="msgCont" VerticalAlignment="Center" Grid.ColumnSpan="4" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
             <TextBlock x:Name="tbMsg" TextAlignment="Center" Margin="0,10,0,0">deneme</TextBlock>
             <Button Content="Ok" Width="100" Margin="0,10" Click="Button_Click" />
         </StackPanel>
 
-        <StackPanel x:Name="hlpCompose" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
+        <StackPanel x:Name="hlpCompose" VerticalAlignment="Center" Grid.ColumnSpan="4" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
             <TextBlock x:Name="tbComposeHelp" Margin="10">
                 <Run FontWeight="Bold" Text="Text Mode:"/><LineBreak />
                 <Run>You can type chars. It is also possible to encode byte values by hex, decimal, and octal forms:</Run><LineBreak/>
@@ -331,13 +361,13 @@
             <Button Content="Ok" Width="100" Margin="0,10" Click="Button_Click" />
         </StackPanel>
 
-        <StackPanel x:Name="inpCont" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
+        <StackPanel x:Name="inpCont" VerticalAlignment="Center" Grid.ColumnSpan="4" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
             <Label Content="You can give a label to the macro or leave empty." HorizontalAlignment="Center" x:Name="lblInp"/>
             <TextBox x:Name="tbInp" TextAlignment="Center" Margin="10,0,10,0" HorizontalAlignment="Stretch" Background="Wheat" Width="{Binding Width, ElementName=lblInp}" ></TextBox>
             <Button Content="Save" Width="100" Margin="0,10" x:Name="btnSaveProceed" Click="btnSaveProceed_Click" />
         </StackPanel>
 
-        <StackPanel x:Name="repeatDialog" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
+        <StackPanel x:Name="repeatDialog" VerticalAlignment="Center" Grid.ColumnSpan="4" Grid.RowSpan="3" Margin="50,0" Background="White" Visibility="Hidden" >
             <TextBlock x:Name="tbMsgRepeat" TextAlignment="Center" Margin="0,10,0,0">Please Enter Repeat Parameters</TextBlock>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
                 <Label Content="Repeat Count:" />

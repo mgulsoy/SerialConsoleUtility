@@ -18,6 +18,7 @@ using System.IO.Ports;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 /*
     Resources: https://stackoverflow.com/questions/14885288/i-o-exception-error-when-using-serialport-open
@@ -29,7 +30,7 @@ namespace SerialConsoleCore {
     /// </summary>
     public partial class MainWindow : Window {
 
-        const string stateFileName = "state.json";
+        string stateFileName = "state.json";
         const string hexRegex = "#[0-9,a-f,A-F]{2}";
 
         SerialPort serialPort;
@@ -51,6 +52,19 @@ namespace SerialConsoleCore {
             });
         public static readonly RoutedCommand RepeatCommand = new RoutedCommand("Repeat", typeof(RoutedCommand));
         public static readonly RoutedCommand StopRepeatCommand = new RoutedCommand("StopRepeat", typeof(RoutedCommand));
+        public static readonly RoutedUICommand SendTboxCommand = new RoutedUICommand("SendTbox", "SendTbox", typeof(RoutedUICommand),
+            new InputGestureCollection() {
+                new KeyGesture(Key.Enter, ModifierKeys.Alt | ModifierKeys.Control )
+            });
+
+        public static readonly RoutedCommand ConvertToU8Command = new RoutedCommand("ConvertToU8", typeof(RoutedCommand));
+        public static readonly RoutedCommand ConvertToU16Command = new RoutedCommand("ConvertToU16", typeof(RoutedCommand));
+        public static readonly RoutedCommand ConvertToU32Command = new RoutedCommand("ConvertToU32", typeof(RoutedCommand));
+        public static readonly RoutedCommand ConvertToU64Command = new RoutedCommand("ConvertToU64", typeof(RoutedCommand));
+        public static readonly RoutedCommand ConvertToI8Command = new RoutedCommand("ConvertToI8", typeof(RoutedCommand));
+        public static readonly RoutedCommand ConvertToI16Command = new RoutedCommand("ConvertToI16", typeof(RoutedCommand));
+        public static readonly RoutedCommand ConvertToI32Command = new RoutedCommand("ConvertToI32", typeof(RoutedCommand));
+        public static readonly RoutedCommand ConvertToI64Command = new RoutedCommand("ConvertToI64", typeof(RoutedCommand));
 
         public enum UtilEnum {
             Traffic, Chart
@@ -147,6 +161,18 @@ namespace SerialConsoleCore {
 
                 rdScroller.ScrollToEnd();
             } );
+        }
+
+        private void AppendValue(string logMessage) {
+            Dispatcher.InvokeAsync(() => {
+                Run run = new Run(Environment.NewLine + logMessage + Environment.NewLine); ;
+                run.Foreground = Brushes.BlueViolet;
+                run.FontFamily = new FontFamily("Consolas");
+                run.FontWeight = FontWeights.Regular;
+                content.Inlines.Add(run);
+
+                rdScroller.ScrollToEnd();
+            });
         }
 
         private void AppendReceived( byte[] data ) {
@@ -253,8 +279,6 @@ namespace SerialConsoleCore {
                 return;
             }
         }
-
-        
 
         private void send( DataToSend data ) {
 
@@ -458,6 +482,14 @@ namespace SerialConsoleCore {
             send( lstSendData.SelectedItem as DataToSend );
         }
 
+        private void SendTboxCommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = serialPort != null && serialPort.IsOpen;
+        }
+
+        private void SendTboxCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            btnSend_Click(null, null);
+        }
+
         private void RepeatCommandBinding_CanExecute( object sender, CanExecuteRoutedEventArgs e ) {
             e.CanExecute = lstSendData.SelectedItem != null
                 && repeaterTask == null 
@@ -469,6 +501,146 @@ namespace SerialConsoleCore {
             //This only repeats on selected list item            
             msgBg.Visibility = Visibility.Visible;
             repeatDialog.Visibility = Visibility.Visible;
+        }
+
+        private void ConvertToU8CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            // Selected lenght must be gt 1
+            e.CanExecute = rdViewer.Selection.Text.Length > 0 && rdViewer.Selection.Text.Length < 3;
+        }
+
+        private void ConvertToU16CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            e.CanExecute = t.Length > 2 && t.Length < 5;
+        }
+
+        private void ConvertToU32CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            e.CanExecute = t.Length > 4 && t.Length < 9;
+        }
+
+        private void ConvertToU64CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            e.CanExecute = t.Length > 8 && t.Length < 17;
+        }
+        
+        private void ConvertToI8CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            // Selected lenght must be gt 1
+            e.CanExecute = rdViewer.Selection.Text.Length > 0 && rdViewer.Selection.Text.Length < 3;
+        }
+
+        private void ConvertToI16CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            e.CanExecute = t.Length > 2 && t.Length < 5;
+        }
+
+        private void ConvertToI32CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            e.CanExecute = t.Length > 4 && t.Length < 9;
+        }
+
+        private void ConvertToI64CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            e.CanExecute = t.Length > 8 && t.Length < 17;
+        }
+
+        private void ConvertToU8CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            var val = Convert.ToByte(t, 16);
+            AppendValue("Uint8: "+ t+ " -> " + val);
+        }
+
+        private void ConvertToU16CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "").PadLeft(4,'0');
+            var val = Convert.ToUInt16(t,16);
+            var valBytes = BitConverter.GetBytes(val);
+            var lEndianVal = BitConverter.ToUInt16(valBytes.Reverse().ToArray());
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("UInt16  [BE:{0}]:{1}  [LE:", t,val);
+            foreach (var i in valBytes) {
+                sb.AppendFormat("{0:x2}",i);
+            }
+            sb.AppendFormat("]:{0}", lEndianVal);
+            AppendValue(sb.ToString());
+        }
+
+        private void ConvertToU32CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "").PadLeft(8,'0');
+            var val = Convert.ToUInt32(t, 16);
+            var valBytes = BitConverter.GetBytes(val);
+            var lEndianVal = BitConverter.ToUInt32(valBytes.Reverse().ToArray());
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("UInt32  [BE:{0}]:{1}  [LE:", t, val);
+            foreach (var i in valBytes) {
+                sb.AppendFormat("{0:x2}", i);
+            }
+            sb.AppendFormat("]:{0}", lEndianVal);
+            AppendValue(sb.ToString());
+        }
+
+        private void ConvertToU64CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "").PadLeft(16,'0');
+            var val = Convert.ToUInt64(t, 16);
+            var valBytes = BitConverter.GetBytes(val);
+            var lEndianVal = BitConverter.ToUInt64(valBytes.Reverse().ToArray());
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("UInt64  [BE:{0}]:{1}  [LE:", t, val);
+            foreach (var i in valBytes) {
+                sb.AppendFormat("{0:x2}", i);
+            }
+            sb.AppendFormat("]:{0}", lEndianVal);
+            AppendValue(sb.ToString());
+        }
+
+
+        private void ConvertToI8CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "");
+            var val = Convert.ToByte(t,16);
+            AppendValue("Int8:" + val);
+        }
+
+
+        private void ConvertToI16CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "").PadLeft(4,'0');
+            var val = Convert.ToInt16(t, 16);
+            var valBytes = BitConverter.GetBytes(val);
+            var lEndianVal = BitConverter.ToInt16(valBytes.Reverse().ToArray());
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("Int16  [BE:{0}]:{1}  [LE:", t, val);
+            foreach (var i in valBytes) {
+                sb.AppendFormat("{0:x2}", i);
+            }
+            sb.AppendFormat("]:{0}", lEndianVal);
+            AppendValue(sb.ToString());
+        }
+
+        
+
+        private void ConvertToI32CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "").PadLeft(8, '0');
+            var val = Convert.ToInt32(t, 16);
+            var valBytes = BitConverter.GetBytes(val);
+            var lEndianVal = BitConverter.ToInt32(valBytes.Reverse().ToArray());
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("Int32  [BE:{0}]:{1}  [LE:", t, val);
+            foreach (var i in valBytes) {
+                sb.AppendFormat("{0:x2}", i);
+            }
+            sb.AppendFormat("]:{0}", lEndianVal);
+            AppendValue(sb.ToString());
+        }
+        
+        private void ConvertToI64CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var t = rdViewer.Selection.Text.Replace(" ", "").PadLeft(16, '0');
+            var val = Convert.ToInt64(t, 16);
+            var valBytes = BitConverter.GetBytes(val);
+            var lEndianVal = BitConverter.ToInt32(valBytes.Reverse().ToArray());
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("Int64  [BE:{0}]:{1}  [LE:", t, val);
+            foreach (var i in valBytes) {
+                sb.AppendFormat("{0:x2}", i);
+            }
+            sb.AppendFormat("]:{0}", lEndianVal);
+            AppendValue(sb.ToString());
         }
 
         private void btnSend_Click( object sender, RoutedEventArgs e ) {
@@ -593,6 +765,26 @@ namespace SerialConsoleCore {
         private void TabItem_GotFocus_1( object sender, RoutedEventArgs e ) {
             Debug.Print( "Chart Got focus" );
             SelectedUtil = UtilEnum.Chart;
+        }
+
+        private void btnLoadProfile_Click(object sender, RoutedEventArgs e) {
+            //Loads a custom profile file
+
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Multiselect = false;
+            ofd.Title = "Select a profile file";
+            ofd.Filter = "Profile File|*.json";
+
+            var result = ofd.ShowDialog();
+
+            if (result.HasValue && result.Value) {
+                // Open requested
+                // save previous state first
+                saveState();
+                stateFileName = ofd.FileName;
+                // load new one
+                loadState();
+            }
         }
     }
 }
